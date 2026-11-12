@@ -213,7 +213,7 @@ app.post('/v1/chat/completions', async (req, res) => {
       res.json(openaiResponse);
     }
     
-  }  } catch (error) {
+  }  catch (error) {
     let detail = error.message;
     const data = error.response?.data;
     if (data && typeof data.on === 'function') {
@@ -233,3 +233,4 @@ app.post('/v1/chat/completions', async (req, res) => {
       }
     });
   }
+});
