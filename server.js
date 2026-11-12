@@ -213,33 +213,23 @@ app.post('/v1/chat/completions', async (req, res) => {
       res.json(openaiResponse);
     }
     
-  } catch (error) {
-    console.error('Proxy error:', error.message);
-    
+  }  } catch (error) {
+    let detail = error.message;
+    const data = error.response?.data;
+    if (data && typeof data.on === 'function') {
+      let body = '';
+      for await (const chunk of data) body += chunk.toString();
+      detail = body;
+    } else if (data) {
+      detail = JSON.stringify(data);
+    }
+    console.error('Proxy error:', error.response?.status, detail);
+
     res.status(error.response?.status || 500).json({
       error: {
-        message: error.message || 'Internal server error',
+        message: detail,
         type: 'invalid_request_error',
         code: error.response?.status || 500
       }
     });
   }
-});
-
-// Catch-all for unsupported endpoints
-app.all('*', (req, res) => {
-  res.status(404).json({
-    error: {
-      message: `Endpoint ${req.path} not found`,
-      type: 'invalid_request_error',
-      code: 404
-    }
-  });
-});
-
-app.listen(PORT, () => {
-  console.log(`OpenAI to NVIDIA NIM Proxy running on port ${PORT}`);
-  console.log(`Health check: http://localhost:${PORT}/health`);
-  console.log(`Reasoning display: ${SHOW_REASONING ? 'ENABLED' : 'DISABLED'}`);
-  console.log(`Thinking mode: ${ENABLE_THINKING_MODE ? 'ENABLED' : 'DISABLED'}`);
-});
